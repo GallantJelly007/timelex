@@ -27,9 +27,6 @@ class Time{
     year=1970
     /** Свойство високосности, если true - год високосный */
     isLeap=false
-
-    /** Стандартное значение временной зоны, UTC-0 по умолчанию*/
-    static defaultTz=Time.TIMEZONE.utc
     /** Текущее смещение времени по временной зоне */
     tz=Time.TIMEZONE.utc
 
@@ -130,6 +127,9 @@ class Time{
         plus_14: 14
     }
 
+    /** Стандартное значение временной зоны, UTC-0 по умолчанию*/
+    static defaultTz=Time.TIMEZONE.utc
+
     /**
      * ISO форматы, могут применяться для форматирования строки с помощью метода toISO()
      */
@@ -187,7 +187,6 @@ class Time{
      * @returns {boolean} 
      * Возвращает true если год високосный, иначе - false
      */
-
     static isLeapYear(year) {
         if (year < 1 || year > 9999) {
             console.log(year)
@@ -492,7 +491,7 @@ class Time{
         this.dayOfWeek=Math.abs(((days%7)-6)<=0?((days%7)-6)+7:((days%7)-6))
     }
 
-    #calcTicks(param){
+    #calcTicks(param={}){
         let days=1;
         let paramYear = (param.hasOwnProperty('year') && typeof param.year=='number' && /^([1-9]|[1-9][0-9]{1,3})$/.test(param.year))?param.year:this.year
         let paramMonth = (param.hasOwnProperty('month') && typeof param.month=='number' && /^([1-9]|1[0-2])$/.test(param.month))?param.month:this.month
@@ -698,32 +697,24 @@ class Time{
      */
     addMonth(months){
         let diff = this.month+months
-        let days = this.#getMonthDays()
         let minus=diff<this.month?true:false
         let index=diff<this.month?this.month-2:this.month-1
-        let allDays=0
-        let currentYear=this.year
-        for(let i=0;i<Math.abs(months);i++){
-            
+        let currentYear = this.year;
+        for(let i=Math.abs(months);i>0;i--){
             if(index>11){
                 currentYear++
-                days = this.#getMonthDays(currentYear%4==0&&currentYear%100!=0||currentYear%400==0)
                 index=0
             }
             if(index<0){
                 currentYear--
-                days = this.#getMonthDays(currentYear%4==0&&currentYear%100!=0||currentYear%400==0)
                 index=11
-            }
-            if(minus){
-                allDays-=days[index]
-            }else{
-                allDays+=days[index]
             }
             index+=minus?-1:1
         }
-        this.ticks+=(allDays*24*3600*1000)
-        this.#calcDate()
+
+        this.month=index+1
+        this.year=currentYear
+        this.#calcTicks()
         return this
     }
 
@@ -917,5 +908,3 @@ class Time{
 if(typeof window ==='undefined'){
     module.exports=Time
 }
-
-
