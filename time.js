@@ -711,7 +711,6 @@ class Time{
             }
             index+=minus?-1:1
         }
-
         this.month=index+1
         this.year=currentYear
         this.#calcTicks()
@@ -908,3 +907,4 @@ class Time{
 if(typeof window ==='undefined'){
     module.exports=Time
 }
+export default Time
