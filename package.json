@@ -1,6 +1,6 @@
 {
   "name": "timelex",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Module for work with time",
   "main": "time.js",
   "type":"module",
