@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "description": "Module for work with time",
   "main": "time.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  
+  
   "repository": {
     "type": "git",
     "url": "git+https://github.com/GallantJelly007/time.js.git"
@@ -19,10 +18,14 @@
     "seconds",
     "ms"
   ],
-  "author": "Alex",
-  "license": "ISC",
+  "author": {
+    "email": "alariel007@gmail.com",
+    "name": "Alex"
+  },
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/GallantJelly007/time.js/issues"
+    "url": "https://github.com/GallantJelly007/time.js/issues",
+    "email": "alariel007@gmail.com"
   },
   "homepage": "https://github.com/GallantJelly007/time.js#readme"
 }
