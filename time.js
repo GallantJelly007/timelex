@@ -999,3 +999,5 @@ class Time{
         return this.ticks
     }
 }
+
+export default Time
