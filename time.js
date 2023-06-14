@@ -63,11 +63,16 @@ class Time{
         ['en',['January','February','March','April','May','June','July','August','September','October','November','December']]
     ])
 
+    static #weekDaysString = new Map([
+        ['ru',['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Восресенье']],
+        ['en',['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']]
+    ])
+
     static #getMonthDayReg(month,leap=false){
-        let day31 = '(0[0-9]|1[0-9]|2[0-9]|3[0-1])'
-        let day30 = '(0[0-9]|1[0-9]|2[0-9]|30)'
-        let day29 = '(0[0-9]|1[0-9]|2[0-9])'
-        let day28 = '(0[0-9]|1[0-9]|2[0-8])'
+        let day31 = /^([1-9]|1[0-9]|2[0-9]|3[0-1])$/
+        let day30 = /^([1-9]|1[0-9]|2[0-9]|30)$/
+        let day29 = /^([1-9]|1[0-9]|2[0-9])$/
+        let day28 = /^([1-9]|1[0-9]|2[0-8])$/
         if([1,3,5,7,8,10,12].includes(month)){
             return day31
         }else if([4,6,9,11].includes(month)){
@@ -128,7 +133,7 @@ class Time{
     }
 
     /** Стандартное значение временной зоны, UTC-0 по умолчанию*/
-    static defaultTz=Time.TIMEZONE.utc
+    static #defaultTz=Time.TIMEZONE.utc
 
     /**
      * ISO форматы, могут применяться для форматирования строки с помощью метода toISO()
@@ -189,7 +194,6 @@ class Time{
      */
     static isLeapYear(year) {
         if (year < 1 || year > 9999) {
-            console.log(year)
             throw new Error("Year out of range Exception")
         }
         return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
@@ -203,7 +207,7 @@ class Time{
     static setDefaultTz(tz){
         for(let key in Time.TIMEZONE){
             if(Time.TIMEZONE[key]==tz){
-                Time.defaultTz=Time.TIMEZONE[key]
+                Time.#defaultTz=Time.TIMEZONE[key]
                 return true
             }
         }
@@ -214,14 +218,14 @@ class Time{
      * Статическая функция для получения кол-ва дней в месяце
      * @param {number} month 
      * Месяц от 1 до 12
-     * @param {boolean} high
+     * @param {boolean} isLeap
      * Если true устанавливает год как високосный
      * ---
      * @returns {number} 
      * Кол-во дней в месяце
      */
-    static getMonthDayCount(month,high=false){
-        let monthDays = [31,high?29:28,31,30,31,30,31,31,30,31,30,31]
+    static getMonthDayCount(month,isLeap=false){
+        let monthDays = [31,isLeap?29:28,31,30,31,30,31,31,30,31,30,31]
         if(month<1||month>12)
             return false
         return monthDays[month-1]
@@ -229,25 +233,46 @@ class Time{
 
     /**
      * Функция для получения строкового представления всех месяцев, или указанного месяца
-     * @param {boolean} thisMonth 
-     * Если true возвращает строковое представление указанного месяца, по умолчанию - false
      * @param {number} month 
      * Номер месяца от 1 до 12
      * @param {string} locale 
      * Параметр локализации
      * ---
      * @returns {string|Array<string>}
-     * Возвращает строку (при thisMonth=true), либо массив строк
+     * Возвращает строку (при month=[1,12]), либо массив строк
      */
-    static getMonthString(thisMonth=false,month=1,locale='ru'){
-        if(month<1||month>12)
+    static getMonthString(month=-1,locale='ru'){
+        if(month!=-1 && (month<1||month>12))
             throw new Error('Month out of range exception')
         if(Time.#monthesString.has(locale)){
-            if(thisMonth){
+            if(month!=-1){
                 let monthes = Time.#monthesString.get(locale)
                 return monthes[month-1]
             }else{
                 return Time.#monthesString.get(locale)
+            }
+        }
+    }
+
+    /**
+     * Функция для получения строкового представления дней недели, или указанного дня
+     * @param {number} day 
+     * Номер дня недели от 1 до 7
+     * @param {string} locale 
+     * Параметр локализации
+     * ---
+     * @returns {string|Array<string>}
+     * Возвращает строку (при day=[1,7]), либо массив строк
+     */
+    static getDayInWeekString(day=-1,locale='ru'){
+        if(day!=-1 && (day<1||day>7))
+        throw new Error('Day out of range exception')
+        if(Time.#weekDaysString.has(locale)){
+            if(day!=-1){
+                let weekDays = Time.#weekDaysString.get(locale)
+                return weekDays[day-1]
+            }else{
+                return Time.#weekDaysString.get(locale)
             }
         }
     }
@@ -296,7 +321,7 @@ class Time{
      * @returns {Time}
      * Возвращает объект Time
      */ 
-    static create(year=1970,month=1,day=1,hours=0,minutes=0,seconds=0,ms=0,tz=Time.TIMEZONE.utc){
+    static create(year=1970,month=1,day=1,hours=0,minutes=0,seconds=0,ms=0,tz=Time.#defaultTz){
         let t = new Time()
         t.#calcTicks({
             year:year,
@@ -320,7 +345,7 @@ class Time{
      * @returns {number}
      * Кол-во високосных лет(дней)
      */
-    static leapYearsBeetwen(yearStart,yearEnd){
+    static leapYearsBetween(yearStart,yearEnd){
         if(yearStart<1||yearStart>9999||yearEnd<1||yearEnd>9999)
             throw new Error('Param year out of range Exception');
         let diff = yearEnd-yearStart
@@ -335,22 +360,18 @@ class Time{
     * @param {number} tz 
     * Временная зона из массива Time.TIMEZONE
     */
-    constructor(param,tz=null){
+    constructor(param=null,tz=null){
         if(typeof param=='string'){
             this.#reverseISO(param)
         }else{
             if(typeof param=='number'){
                 this.timestamp = param
             }else if(param instanceof Date){
-                if(typeof window ==='undefined'){
-                    this.timestamp=param.getTime()
-                }else{
-                    this.timestamp=param.getTime()-(param.getTimezoneOffset()*60*1000)
-                }
+                this.timestamp=param.getTime()
             }else if(param instanceof Time){
                 this.timestamp=param.ticks
             }else{
-                this.timestamp=new Date().getTime()
+                this.timestamp=Date.now()
             }
             if(tz!==null){
                 let isset=false
@@ -362,12 +383,11 @@ class Time{
                     }
                 }
                 if(!isset){
-                    this.tz=Time.defaultTz
+                    this.tz=Time.#defaultTz
                 }
             }else{
-                this.tz=Time.defaultTz
+                this.tz=Time.#defaultTz
             }
-            this.timestamp+=(this.tz*3600*1000)
             this.#calcDate()
         }
     }
@@ -421,7 +441,6 @@ class Time{
                 break
             }
         } 
-        console.log(objDate)
         this.#calcTicks({
             year:objDate.year,
             month:objDate.month,
@@ -436,70 +455,48 @@ class Time{
 
     #calcDate(){
         this.ticks=Time.timestampToTicks(this.timestamp)
-        let days = this.ticks/86400000
-        let leapDays = days/1461-days/36524+days/146097+59/365
-        let years = ((this.ticks/86400000) - leapDays)/365;
-        this.year=Math.trunc(years)+1
-        let daysInYear = Math.trunc(((this.ticks-(Math.floor(leapDays)*86400000))-((this.year-1)*365*86400000))/86400000)
-        this.isLeap=Time.isLeapYear(this.year)
+        let calcTicks = this.ticks+(this.tz*3600*1000)
+        let days = calcTicks/86400000
+        let d = Math.trunc(days)
+        let leapForYear = Math.trunc((d+306)/1461)-Math.trunc((d+306)/36524)+Math.trunc((d+306)/146096)
+        this.year=Math.trunc((d-leapForYear)/365)+1
+        this.isLeap = Time.isLeapYear(this.year)
+
+        let y = this.year-1
+        let diy = d-(y * 365 + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 1)
         let arrDays = this.isLeap?Time.#daysMonthLeapYear:Time.#daysMonthYear
-        let month=0;
-        let day=0; 
-        for(let i = 0; i<arrDays.length;i++){
-            if(daysInYear<=arrDays[i+1]){
-                month=i+1
-                day=Math.floor(daysInYear-arrDays[i])+1
+        let day=1,month=1
+        for(let i=1;i<arrDays.length;i++){
+            if(diy<=arrDays[i]){
+                day = diy-arrDays[i-1]
+                month=i
                 break
             }
         }
-
-        let currentCountMonthDay = Time.getMonthDayCount(month,this.isLeap)
-        let isCorrect=false
-        if(day>currentCountMonthDay){
-            if(month==12){
-                this.year++;
-                month=1
-                this.isLeap = Time.isLeapYear(this.year)
-                day = 1
-            }else{
-                month++;
-                day = 1
-            }
-            isCorrect=true
-        }
-        if(day-1==0&&!this.isLeap&&!isCorrect&&(this.ticks/86400000>1)){
-            if(month-1==0){
-                month = 12;
-                this.year+=this.year!=1?-1:0;
-                this.isLeap = Time.isLeapYear(this.year)
-                day = Time.getMonthDayCount(month,this.isLeap)
-            }else{
-                month--;
-                day = Time.getMonthDayCount(month,this.isLeap)
-            }
-        }
-
         this.month=month
         this.day=day
-        this.decimalHours = (this.ticks%86400000)/3600000
-        this.decimalMinutes = (this.ticks%3600000)/60000
-        this.decimalSeconds = (this.ticks%60000)/1000
+        this.decimalHours = (calcTicks%86400000)/3600000
+        this.decimalMinutes = (calcTicks%3600000)/60000
+        this.decimalSeconds = (calcTicks%60000)/1000
         this.hours = Math.trunc(this.decimalHours)
         this.minutes = Math.trunc(this.decimalMinutes)
         this.seconds = Math.trunc(this.decimalSeconds)
-        this.milliseconds = this.ticks%1000
-        this.dayOfWeek=Math.abs(((days%7)-6)<=0?((days%7)-6)+7:((days%7)-6))
+        this.milliseconds = calcTicks%1000
+        this.dayOfWeek=Math.floor(Math.abs(((days%7)-6)<=0?((days%7)-6)+7:((days%7)-6)))
     }
 
     #calcTicks(param={}){
-        let days=1;
         let paramYear = (param.hasOwnProperty('year') && typeof param.year=='number' && /^([1-9]|[1-9][0-9]{1,3})$/.test(param.year))?param.year:this.year
-        let paramMonth = (param.hasOwnProperty('month') && typeof param.month=='number' && /^([1-9]|1[0-2])$/.test(param.month))?param.month:this.month
-        let paramDay = (param.hasOwnProperty('day') && typeof param.day=='number' && /^([0-9]|[1-2][0-9]|3[0-1])$/.test(param.day))?param.day:this.day
-        let paramHours = (param.hasOwnProperty('hours') && typeof param.hours=='number' && /^([0-9]|1[0-9]|2[0-3])$/.test(param.hours))?param.hours:this.hours
-        let paramMinutes = (param.hasOwnProperty('minutes') && typeof param.minutes=='number' && /^([0-9]|[0-5][0-9])$/.test(param.minutes))?param.minutes:this.minutes
-        let paramSeconds = (param.hasOwnProperty('seconds') && typeof param.seconds=='number' && /^([0-9]|[0-5][0-9])$/.test(param.seconds))?param.seconds:this.seconds
-        let paramMs = (param.hasOwnProperty('milliseconds') && typeof param.milliseconds=='number' && /^([0-9]|[1-9][0-9]|[1-9][0-9][0-9])$/.test(param.milliseconds))?param.milliseconds:this.milliseconds
+        this.year = paramYear
+        this.isLeap = Time.isLeapYear(this.year)
+        let paramMonth = (param.hasOwnProperty('month') && typeof param.month=='number' && /^([1-9]|1[0-2])$/.test(param.month))?param.month: this.month
+        this.month = paramMonth
+        let paramDay = (param.hasOwnProperty('day') && typeof param.day=='number' && Time.#getMonthDayReg(paramMonth,this.isLeap).test(param.day)) ? param.day 
+                       : (Time.#getMonthDayReg(this.day,this.isLeap) ? this.day : 1)
+        let paramHours = (param.hasOwnProperty('hours') && typeof param.hours=='number' && /^([0-9]|1[0-9]|2[0-3])$/.test(param.hours))?param.hours: this.hours
+        let paramMinutes = (param.hasOwnProperty('minutes') && typeof param.minutes=='number' && /^([0-9]|[0-5][0-9])$/.test(param.minutes))?param.minutes: this.minutes
+        let paramSeconds = (param.hasOwnProperty('seconds') && typeof param.seconds=='number' && /^([0-9]|[0-5][0-9])$/.test(param.seconds))?param.seconds: this.seconds
+        let paramMs = (param.hasOwnProperty('milliseconds') && typeof param.milliseconds=='number' && /^([0-9]|[1-9][0-9]|[1-9][0-9][0-9])$/.test(param.milliseconds))?param.milliseconds: this.milliseconds
         if(param.hasOwnProperty('timezone') && typeof param.timezone=='number'){
             for(let key in Time.TIMEZONE){
                 if(Time.TIMEZONE[key]==param.timezone){
@@ -508,19 +505,16 @@ class Time{
                 }
             }
         }
-        if (paramYear >= 1 && paramYear <= 9999 && paramMonth >= 1 && paramMonth <= 12) {
-            this.year = paramYear
-            this.month = paramMonth
-            let arrDays = Time.isLeapYear(paramYear)? Time.#daysMonthLeapYear: Time.#daysMonthYear;
-            if (paramDay >= 1 && paramDay <= arrDays[paramMonth] - arrDays[paramMonth - 1]) {
-                this.day=paramDay
-                let y = paramYear - 1;
-                days = y * 365 + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) + arrDays[paramMonth - 1] + paramDay - 1;
-            }
+        let days=1;
+        let arrDays = this.isLeap ? Time.#daysMonthLeapYear: Time.#daysMonthYear
+        if (paramDay >= 1 && paramDay <= arrDays[paramMonth] - arrDays[paramMonth - 1]) {
+            this.day=paramDay
+            let y = paramYear - 1;
+            days = y * 365 + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) + arrDays[paramMonth - 1] + paramDay - 1
         }
-        this.dayOfWeek=Math.abs(((days%7)-6)<=0?((days%7)-6)+7:((days%7)-6))
-        let timeTicks = paramHours * 3600000 + paramMinutes * 60000 + paramSeconds*1000+paramMs;
-        this.decimalHours = timeTicks/3600000;
+        this.dayOfWeek=Math.floor(Math.abs(((days%7)-6)<=0?((days%7)-6)+7:((days%7)-6)))
+        let timeTicks = paramHours * 3600000 + paramMinutes * 60000 + paramSeconds*1000+paramMs
+        this.decimalHours = timeTicks/3600000
         this.decimalMinutes = (paramMinutes * 60000 + paramSeconds*1000+paramMs)/60000
         this.decimalSeconds = (paramSeconds*1000+paramMs)/1000
         this.hours = Math.trunc(this.decimalHours)
@@ -530,11 +524,10 @@ class Time{
         if (timeTicks > Number.MAX_SAFE_INTEGER || timeTicks < Number.MIN_SAFE_INTEGER){
             throw new Error('Out of range number value when calc ticks in time')
         }
-        this.isLeap = this.year%4==0&&(this.year%100!=0||this.year%400==0)
         this.ticks = Math.trunc(days*24*3600*1000)+timeTicks
-        this.ticks+=(this.ticks<Math.abs(this.tz*3600000)&&this.tz<0)?-this.ticks:(this.tz*3600000)
+        this.ticks += (this.tz*3600000*-1)
         this.timestamp = Time.ticksToTimestamp(this.ticks)
-    }   
+    }      
 
     #getMonthDays(leap=null){
         leap = leap!==null?leap:this.isLeap
@@ -545,57 +538,19 @@ class Time{
      * Установка новой временной зоны для текущего объекта Time
      * @param {number} tz 
      * Временная зона из массива Time.TIMEZONE
-     * @param {boolean} diff
-     * Параметр отвечающий за вычитание разницы времени между старой и новой временной зоной, по умолчанию - true
     */
-    setTz(tz,diff=true){
+    setTz(tz){
         let isset=false
         for(let key in Time.TIMEZONE){
             if(Time.TIMEZONE[key]==tz){
-                if(diff){
-                    let diffTz=Time.TIMEZONE[key]-this.tz
-                    this.ticks+=(diffTz*3600*1000)
-                }
                 this.tz=Time.TIMEZONE[key]
                 isset=true
                 break
             }
         }
-        if(isset&&diff){
+        if(isset)
             this.#calcDate()
-        }
         return this
-    }
-
-    /**
-     * Функция для получения строки времени в формате ISO
-     * @param {?string} format 
-     * Строка формата из свойства Time.ISOFormats
-     * @returns {string} Строка времени в формате ISO
-     */
-    toISO(format=null){
-        if(format!=null){
-            for(let key in Time.ISOFormats){
-                if(format==Time.ISOFormats[key])
-                    return this.format(Time.ISOFormats[key])
-            }
-        }
-        return this.format(Time.ISOFormats.DATETIMEMSCLNTZ)
-    }
-
-    /**
-     * Функция для получения строкового представления месяца текущего Time объекта
-     * @param {string} locale 
-     * Параметр локализации
-     * ---
-     * @returns {string}
-     * Возвращает строку с наименованием месяца
-     */
-    getMonthString(locale='ru'){
-        if(Time.#monthesString.has(locale)){
-            let monthes = Time.#monthesString.get(locale)
-            return monthes[this.month-1]
-        }
     }
 
     /**
@@ -647,8 +602,14 @@ class Time{
         return this
     }
 
+    /**
+     * Функция для сложения и вычитания секунд (для вычитания используйте отрицательные значения)
+     * @param {number} seconds
+     * Кол-во секунд для прибавления/вычитания
+     * @returns {Time} возвращает текущий объект Time с обновленными значениями
+     */
     addSeconds(seconds){
-        this.ticks+=(seconds*1000)
+        this.timestamp+=(seconds*1000)
         this.#calcDate()
         return this
     }
@@ -660,7 +621,7 @@ class Time{
      * @returns {Time} возвращает текущий объект Time с обновленными значениями
      */
     addMinutes(minutes){
-        this.ticks+=(minutes*60*1000)
+        this.timestamp+=(minutes*60*1000)
         this.#calcDate()
         return this
     }
@@ -672,24 +633,24 @@ class Time{
      * @returns {Time} возвращает текущий объект Time с обновленными значениями
      */
     addHours(hours){
-        this.ticks+=(hours*3600*1000)
+        this.timestamp+=(hours*3600*1000)
         this.#calcDate()
         return this
     }
- 
+
     /**
-     * Функция для сложения и вычитания лет (для вычитания используйте отрицательные значения)
-     * @param {number} years
-     * Кол-во лет для прибавления/вычитания
+     * Функция для сложения и вычитания дней (для вычитания используйте отрицательные значения)
+     * @param {number} days
+     * Кол-во дней для прибавления/вычитания
      * @returns {Time} возвращает текущий объект Time с обновленными значениями
-     */
-    addYear(years){
-        this.year+=years
-        this.#calcTicks()
+    */
+    addDay(days){
+        this.timestamp+=(days*24*3600000)
+        this.#calcDate()
         return this
     }
-    
-     /**
+
+    /**
      * Функция для сложения и вычитания месяцев (для вычитания используйте отрицательные значения)
      * @param {number} months
      * Кол-во месяцев для прибавления/вычитания
@@ -698,7 +659,7 @@ class Time{
     addMonth(months){
         let diff = this.month+months
         let minus=diff<this.month?true:false
-        let index=diff<this.month?this.month-2:this.month-1
+        let index=this.month-1
         let currentYear = this.year;
         for(let i=Math.abs(months);i>0;i--){
             if(index>11){
@@ -716,16 +677,16 @@ class Time{
         this.#calcTicks()
         return this
     }
-
+ 
     /**
-     * Функция для сложения и вычитания дней (для вычитания используйте отрицательные значения)
-     * @param {number} days
-     * Кол-во дней для прибавления/вычитания
+     * Функция для сложения и вычитания лет (для вычитания используйте отрицательные значения)
+     * @param {number} years
+     * Кол-во лет для прибавления/вычитания
      * @returns {Time} возвращает текущий объект Time с обновленными значениями
-    */
-    addDay(days){
-        this.ticks+=(days*24*3600*1000)
-        this.#calcDate()
+     */
+    addYear(years){
+        this.year+=years
+        this.#calcTicks()
         return this
     }
 
@@ -745,22 +706,22 @@ class Time{
         let isCalc=false
         if(/^([0-9]|1[0-9]|2[0-3])$/.test(hours)){
             let diffHours = Number(hours)-this.hours
-            this.ticks+=(diffHours*3600*1000)
+            this.timestamp+=(diffHours*3600*1000)
             isCalc=true
         }
         if(/^([0-9]|[0-5][0-9])$/.test(minutes)){
             let diffMinutes = Number(minutes)-this.minutes
-            this.ticks+=(diffMinutes*60*1000)
+            this.timestamp+=(diffMinutes*60*1000)
             isCalc=true
         }
         if(/^([0-9]|[0-5][0-9])$/.test(seconds)){
             let diffSeconds = Number(seconds)-this.seconds
-            this.ticks+=(diffSeconds*1000)
+            this.timestamp+=(diffSeconds*1000)
             isCalc=true
         }
         if(/^([0-9]|[1-9][0-9]|[1-9][0-9][0-9])$/.test(milliseconds)){
             let diffMili = Number(milliseconds)-this.milliseconds
-            this.ticks+=diffMili
+            this.timestamp+=diffMili
             isCalc=true
         }
         if(isCalc)
@@ -803,7 +764,7 @@ class Time{
      */
     startDay(){
         let sum = (this.hours*3600*1000)+(this.minutes*60*1000)+(this.seconds*1000)+this.milliseconds
-        this.ticks-=sum
+        this.timestamp-=sum
         this.#calcDate()
         return this
     }
@@ -814,10 +775,114 @@ class Time{
      */
     endDay(){
         let sum = ((23-this.hours)*3600*1000)+((59-this.minutes)*60*1000)+((59-this.seconds)*1000)+(999-this.milliseconds)
-        this.ticks+=sum
+        this.timestamp+=sum
         this.#calcDate()
         return this
     }
+
+    /**
+     * Функция для сравнения двух объектов Time с точностью до секунды
+     * @param {Time} time 
+     * Сравниваемый объект Time
+     * @returns 
+     */
+    equals(time,isEqMillis=false){
+        if(time instanceof Time){
+            let res = this.year === time.year && this.month === time.month && this.day === time.day
+                    && this.hours === time.hours && this.minutes === time.minutes && this.seconds === time.seconds  
+            return isEqMillis? res && this.milliseconds === time.milliseconds : res
+        }
+        return false
+    }
+
+    /**
+     * Функция для сравнения двух объектов Time по дате
+     * @param {Time} time 
+     * Сравниваемый объект Time
+     * @returns 
+     */
+    equalsDate(time){
+        if(time instanceof Time){
+            return this.year === time.year && this.month === time.month && this.day === time.day
+        }
+        return false
+    }
+
+    /**
+     * Функция для сравнения двух объектов Time по времени без учета даты
+     * @param {Time} time 
+     * Сравниваемый объект Time
+     * @param {boolean} isEqMillis
+     * Сравнивать ли миллисекунды, по умолчанию - false
+     * @returns 
+     */
+    equalsTime(time,isEqMillis=false){
+        if(time instanceof Time){
+            let res = this.hours === time.hours && this.minutes === time.minutes && this.seconds === time.seconds  
+            return isEqMillis? res && this.milliseconds === time.milliseconds : res
+        }
+        return false
+    }
+
+    /**
+     * Функция для получения кол-ва секунд прошедших между двумя объектами Time, всегда возвращает целое положительное число
+     * @param {*} time 
+     * @returns 
+     */
+    secondsBetween(time){
+        if(!(time instanceof Time)) throw new Exception('The type argument does not match the Time class!')
+        return Math.abs(Math.trunc((this.ticks-time.ticks)/1000))
+    }
+
+    /**
+     * Функция для получения кол-ва минут прошедших между двумя объектами Time, всегда возвращает целое положительное число
+     * @param {*} time 
+     * @returns 
+     */
+    minutesBetween(time){
+        if(!(time instanceof Time)) throw new Exception('The type argument does not match the Time class!')
+        return Math.abs(Math.trunc((this.ticks-time.ticks)/60000))
+    }
+
+    /**
+     * Функция для получения кол-ва часов прошедших между двумя объектами Time, всегда возвращает целое положительное число
+     * @param {*} time 
+     * @returns 
+     */
+    hoursBetween(time){
+        if(!(time instanceof Time)) throw new Exception('The type argument does not match the Time class!')
+        return Math.abs(Math.trunc((this.ticks-time.ticks)/3600000))
+    }
+    /**
+     * Функция для получения кол-ва дней прошедших между двумя объектами Time, всегда возвращает целое положительное число
+     * @param {*} time 
+     * @returns 
+     */
+    daysBetween(time){
+        if(!(time instanceof Time)) throw new Exception('The type argument does not match the Time class!')
+        return Math.abs(Math.trunc((this.ticks-time.ticks)/86400000))
+    }
+
+    /**
+     * Функция для получения кол-ва прошедших недель между двумя объектами Time, всегда возвращает целое положительное число
+     * @param {*} time 
+     * @returns 
+     */
+    weeksBetween(time){
+        if(!(time instanceof Time)) throw new Exception('The type argument does not match the Time class!')
+        return Math.abs(Math.trunc((this.ticks-time.ticks)/(86400000*7)))
+    }
+
+    /**
+     * Функция для получения кол-ва месяцев прошедших между двумя объектами Time, всегда возвращает целое положительное число
+     * @param {*} time 
+     * @returns 
+     */
+    monthBetween(time){
+        if(!(time instanceof Time)) throw new Exception('The type argument does not match the Time class!')
+        return Math.abs(this.month - time.month) + Math.abs(this.year-time.year)*12
+    }
+
 
     /**
      * Функция для свободного форматирования строки с использованием текущего объекта Time
@@ -885,11 +950,11 @@ class Time{
             item = item.replace(/H/g, this.hours.toString().padStart(2,'0'))
             item = item.replace(/m/g, this.minutes.toString().padStart(2,'0'))
             item = item.replace(/S/g, this.seconds.toString().padStart(2,'0'))
-            item = item.replace(/Y/g, this.year)
-            item = item.replace(/y/g, this.year.toString().slice(2))
+            item = item.replace(/Y/g, this.year.toString().padStart(4,'0'))
+            item = item.replace(/y/g, this.year.toString().padStart(4,'0').slice(2))
             item = item.replace(/D/g, this.day.toString().padStart(2,'0'))
             item = item.replace(/M/g, this.month.toString().padStart(2,'0'))
-            item = item.replace(/s/g, this.milliseconds.toString().padStart(2,'0'))
+            item = item.replace(/s/g, this.milliseconds.toString().padStart(3,'0'))
             item = item.replace(/Th/g, `${this.tz>=0?'+':'-'}`+Math.abs(Math.floor(this.tz)).toString().padStart(2,'0'))
             item = item.replace(/Tp/g, Math.abs((this.tz*60)%60).toString().padStart(2,'0'))
             item = item.replace(/Tz/g, `${this.tz>=0?'+':'-'}`+Math.abs(Math.floor(this.tz)).toString().padStart(2,'0')+':'+Math.abs((this.tz*60)%60).toString().padStart(2,'0'))
@@ -899,12 +964,38 @@ class Time{
         return pattern
     }
 
+    /**
+     * Функция для получения строки времени в формате ISO
+     * @param {?string} format 
+     * Строка формата из свойства Time.ISOFormats
+     * @returns {string} Строка времени в формате ISO
+     */
+    toISO(format = null) {
+        if (format != null) {
+            for (let key in Time.ISOFormats) {
+                if (format == Time.ISOFormats[key])
+                    return this.format(Time.ISOFormats[key])
+            }
+        }
+        return this.format(Time.ISOFormats.DATETIMEMSCLNTZ)
+    }
+
+    /**
+     * Функция для получения строкового представления месяца текущего Time объекта
+     * @param {string} locale 
+     * Параметр локализации
+     * ---
+     * @returns {string}
+     * Возвращает строку с наименованием месяца
+     */
+    getMonthString(locale = 'ru') {
+        if (Time.#monthesString.has(locale)) {
+            let monthes = Time.#monthesString.get(locale)
+            return monthes[this.month - 1]
+        }
+    }
+
     valueOf(){
         return this.ticks
     }
 }
-
-if(typeof window ==='undefined'){
-    module.exports=Time
-}
-export default Time

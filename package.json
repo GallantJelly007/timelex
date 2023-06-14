@@ -1,0 +1,28 @@
+{
+  "name": "time",
+  "version": "1.0.0",
+  "description": "Module for work with time",
+  "main": "time.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GallantJelly007/time.js.git"
+  },
+  "keywords": [
+    "time",
+    "hours",
+    "minutes",
+    "month",
+    "years",
+    "seconds",
+    "ms"
+  ],
+  "author": "Alex",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GallantJelly007/time.js/issues"
+  },
+  "homepage": "https://github.com/GallantJelly007/time.js#readme"
+}
