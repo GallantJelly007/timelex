@@ -1,9 +1,9 @@
 {
-  "name": "time",
+  "name": "timelex",
   "version": "1.0.0",
   "description": "Module for work with time",
   "main": "time.js",
-  
+  "type":"module",
   
   "repository": {
     "type": "git",
