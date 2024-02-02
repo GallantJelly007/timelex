@@ -26,6 +26,7 @@
     + [__diff__](#diffparam)
     + [__getMonthString__](#getmonthstringlocale)
     + [__getMonthDayCount__](#getmonthdaycount)
+    + [__update__](#update)
     + [__setTime__](#settimehoursminutessecondsmilliseconds)
     + [__setDate__](#setdatedaymonthyear)
     + [__setTz__](#settztz)
@@ -522,6 +523,24 @@ console.log(time.getMonthString()) // Выведет строку 'Январь'
 
 let time = new Time(0) // Время соответствующее 01.01.1970 00:00:00
 console.log(time.getMonthDayCount()) // Выведет: 31
+
+```
+&nbsp;
+
+---
+&nbsp;
+
+### ___update()___  
+
+Функция для обновления объекта до текущего времени
+
+#### __Возврат:__
+(___Time___) возвращает текущий объект Time с обновленными значениями (можно использовать цепочку вызовов)
+
+```js
+
+let time = new Time(0) // Время соответствующее 01.01.1970 00:00:00
+time.update() // Время соответствующее текущему
 
 ```
 &nbsp;
