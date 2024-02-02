@@ -563,6 +563,15 @@ class Time{
     }
 
     /**
+     * Функция для обновления объекта до текущего времени
+     */
+    update() {
+        this.timestamp = Date.now()
+        this.#calcDate()
+        return this
+    }
+
+    /**
      * Функция для сложения дат
      * @param {Time|Date|string|number} param
      * Объект Time,Date либо строка времени в формате ISO, или метка времени UNIX для сложения с текущей датой 
@@ -882,7 +891,6 @@ class Time{
         if(!(time instanceof Time)) throw new Exception('The type argument does not match the Time class!')
         return Math.abs(this.month - time.month) + Math.abs(this.year-time.year)*12
     }
-
 
     /**
      * Функция для свободного форматирования строки с использованием текущего объекта Time

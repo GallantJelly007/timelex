@@ -7,7 +7,7 @@
   
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/GallantJelly007/time.js.git"
+    "url": "git+https://github.com/GallantJelly007/timelex.git"
   },
   "keywords": [
     "time",
@@ -24,8 +24,8 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/GallantJelly007/time.js/issues",
+    "url": "https://github.com/GallantJelly007/timelex/issues",
     "email": "alariel007@gmail.com"
   },
-  "homepage": "https://github.com/GallantJelly007/time.js#readme"
+  "homepage": "https://github.com/GallantJelly007/timelex#readme"
 }
