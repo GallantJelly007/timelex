@@ -1,8 +1,8 @@
 {
   "name": "timelex",
-  "version": "1.0.1",
-  "description": "Module for work with time",
-  "main": "time.js",
+  "version": "1.0.2",
+  "description": "Module for working with time",
+  "main": "timelex.mjs",
   "type":"module",
   
   "repository": {
